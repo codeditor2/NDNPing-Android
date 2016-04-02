@@ -54,7 +54,8 @@ public class MainActivity extends ActionBarActivity
     implements DrawerFragment.DrawerCallbacks,
                LogcatFragment.Callbacks,
                FaceListFragment.Callbacks,
-               RouteListFragment.Callbacks
+               RouteListFragment.Callbacks,
+               PingListFragment.Callbacks
 {
 
   @Override
@@ -163,8 +164,10 @@ public class MainActivity extends ActionBarActivity
           fragment = LogcatFragment.newInstance();
           break;
         case DRAWER_ITEM_PING:
-        	NetThread thread = new NetThread();
-		thread.start();
+	  Toast.makeText(MainActivity.this, "ping clicked", Toast.LENGTH_LONG).show();
+	  fragment = PingListFragment.newInstance();
+//         	NetThread thread = new NetThread();
+// 		thread.start();
         default:
           // Invalid; Nothing else needs to be done
           return;
@@ -228,7 +231,6 @@ public class MainActivity extends ActionBarActivity
 	}
   
   
-  
 	private class NetThread extends Thread {
 		public NetThread() { }
 
@@ -263,7 +265,7 @@ public class MainActivity extends ActionBarActivity
 		}
 	}
 	
-		private static Handler actionHandler = new Handler() {
+	private static Handler actionHandler = new Handler() {
 
 		public void handleMessage(Message msg) {
 
