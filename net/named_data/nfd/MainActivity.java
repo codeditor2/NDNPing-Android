@@ -168,6 +168,7 @@ public class MainActivity extends ActionBarActivity
 	  fragment = PingListFragment.newInstance();
 //         	NetThread thread = new NetThread();
 // 		thread.start();
+	  break;
         default:
           // Invalid; Nothing else needs to be done
           return;
@@ -181,107 +182,6 @@ public class MainActivity extends ActionBarActivity
       .replace(R.id.main_fragment_container, fragment, fragmentTag)
       .commit();
   }
-  
-  	private class PingTimer implements OnData, OnTimeout {
-
-		private long startTime;
-
-		public void onData(Interest interest, Data data) {
-			++ callbackCount_;
-
-//			Log.i(TAG, "Got data packet with name " + data.getName().toUri());
-
-			long elapsedTime = System.currentTimeMillis() - this.startTime;
-
-			String name = data.getName().toUri();
-
-			String pingTarget = name.substring(0, name.lastIndexOf("/"));
-
-			String contentStr = pingTarget + ": " + String.valueOf(elapsedTime) + " ms";
-
-//			Log.i(TAG, "Content " + contentStr);
-
-			// Send a result to Screen
-
-			Message msg = new Message();
-
-			msg.what = 200; // Result Code ex) Success code: 200 , Fail Code:
-							// 400 ...
-
-			msg.obj = contentStr; // Result Object
-
-			actionHandler.sendMessage(msg);
-
-		}
-
-		public int callbackCount_ = 0;
-
-		public void onTimeout(Interest interest) {
-
-			++callbackCount_;
-
-//			Log.i(TAG, "Time out for interest " + interest.getName().toUri());
-
-		}
-
-		public void startUp() {
-			startTime = System.currentTimeMillis();
-		}
-
-	}
-  
-  
-	private class NetThread extends Thread {
-		public NetThread() { }
-
-		@Override
-		public void run() {
-		    Face face = new Face();
-		    String pingName = "/ndn/org/caida/ping/" + Math.floor(Math.random() * 100000);
-		    Name name = new Name(pingName);	    
-		    // build interest
-		    Interest interest = new Interest(name);
-		    interest.setInterestLifetimeMilliseconds(2000);
-		    interest.setMustBeFresh(true);	    
-		    
-		    System.out.println("Express name " + name.toUri());
-		    PingTimer timer = new PingTimer();
-		    timer.startUp();
-		    try {
-			face.expressInterest(interest, timer, timer);
-		    } catch (IOException e) {
-		      	System.out.println("IO failure while sending interest: ");
-		    }
-		    
-		    // The main event loop.
-		    while (timer.callbackCount_ < 1) {
-		    try{
-			Thread.sleep(5);
-			} catch (InterruptedException exception) {
-			System.out.println("IO failure while sending interest: ");
-		    }
-		    }
-
-		}
-	}
-	
-	private static Handler actionHandler = new Handler() {
-
-		public void handleMessage(Message msg) {
-
-			String viewMsg = "Empty";
-			switch (msg.what) { // Result Code
-			case 200: // Result Code Ex) Success: 200
-				viewMsg = (String) msg.obj; // Result Data..
-				break;
-			default:
-				viewMsg = "Error Code: " + msg.what;
-
-				break;
-			}			
-//		      Toast.makeText(MainActivity.this, viewMsg, Toast.LENGTH_LONG).show();
-		}
-	};
 
   @Override
   public void onDisplayLogcatSettings() {
@@ -297,6 +197,11 @@ public class MainActivity extends ActionBarActivity
   public void onRouteItemSelected(RibEntry ribEntry)
   {
     replaceContentFragmentWithBackstack(RouteInfoFragment.newInstance(ribEntry));
+  }
+  
+  @Override
+  public void onPingItemSelected() {
+  // 
   }
 
   //////////////////////////////////////////////////////////////////////////////

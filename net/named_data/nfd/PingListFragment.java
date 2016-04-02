@@ -40,6 +40,16 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.os.Handler;
+import android.os.Message;
+
+import java.io.IOException;
+import net.named_data.jndn.Data;
+import net.named_data.jndn.Face;
+import net.named_data.jndn.Interest;
+import net.named_data.jndn.Name;
+import net.named_data.jndn.OnData;
+import net.named_data.jndn.OnTimeout;
 
 import com.intel.jndn.management.types.FaceStatus;
 
@@ -119,6 +129,8 @@ public class PingListFragment extends ListFragment {
         retrievePingList();
         return true;
       case R.id.ping_list_add:
+	NetThread thread = new NetThread();
+	thread.start();
 //         FaceCreateDialogFragment dialog = FaceCreateDialogFragment.newInstance();
 //         dialog.setTargetFragment(PingListFragment.this, 0);
 //         dialog.show(getFragmentManager(), "FaceCreateFragment");
@@ -126,6 +138,94 @@ public class PingListFragment extends ListFragment {
     }
     return super.onOptionsItemSelected(item);
   }
+  
+    private class PingTimer implements OnData, OnTimeout {
+	private long startTime;
+	public int callbackCount_ = 0;
+	
+	public void onData(Interest interest, Data data) {
+	  ++ callbackCount_;
+	  Log.i(TAG, "Got data packet with name " + data.getName().toUri());
+	  long elapsedTime = System.currentTimeMillis() - this.startTime;
+	  String name = data.getName().toUri();
+	  String pingTarget = name.substring(0, name.lastIndexOf("/"));
+	  String contentStr = pingTarget + ": " + String.valueOf(elapsedTime) + " ms";
+	  
+	  // Send a result to Screen
+	  Message msg = new Message();
+	  msg.what = 200; // Result Code ex) Success code: 200 , Fail Code:
+							// 400 ...
+							
+	  msg.obj = contentStr; // Result Object
+	  actionHandler.sendMessage(msg);
+
+	}
+
+	public void onTimeout(Interest interest) {
+	
+	  ++ callbackCount_;
+// 	  Log.i(TAG, "Time out for interest " + interest.getName().toUri());
+
+	}
+
+	public void startUp() {
+	  startTime = System.currentTimeMillis();
+	}
+
+    }
+	
+	private class NetThread extends Thread {
+	  public NetThread() { }
+	  
+	  @Override
+	  public void run() {
+	    Face face = new Face();
+	    String pingName = "/ndn/org/caida/ping/" + Math.floor(Math.random() * 100000);
+	    Name name = new Name(pingName);
+	    
+	    // build interest
+	    Interest interest = new Interest(name);
+	    interest.setInterestLifetimeMilliseconds(2000);
+	    nterest.setMustBeFresh(true);
+	    
+	    System.out.println("Express name " + name.toUri());
+	    PingTimer timer = new PingTimer();
+	    timer.startUp();
+	    try {
+		face.expressInterest(interest, timer, timer);
+	    } catch (IOException e) {
+		System.out.println("IO failure while sending interest: ");
+	    }
+	    
+	    // The main event loop.
+	    while (timer.callbackCount_ < 1) {
+	      try{
+		  Thread.sleep(5);
+	      } catch (InterruptedException exception) {
+		  System.out.println("IO failure while sending interest: ");
+	      }
+	    }
+
+	  }
+	}
+	
+	private Handler actionHandler = new Handler() {
+
+		public void handleMessage(Message msg) {
+
+			String viewMsg = "Empty";
+			switch (msg.what) { // Result Code
+			case 200: // Result Code Ex) Success: 200
+				viewMsg = (String) msg.obj; // Result Data..
+				break;
+			default:
+				viewMsg = "Error Code: " + msg.what;
+
+				break;
+			}		
+		      Toast.makeText(getActivity(), viewMsg, Toast.LENGTH_LONG).show();
+		}
+	};
 
   @Override
   public void onResume() {
@@ -165,7 +265,7 @@ public class PingListFragment extends ListFragment {
   onListItemClick(ListView l, View v, int position, long id) {
     if (m_callbacks != null) {
       FaceStatus faceStatus = (FaceStatus)l.getAdapter().getItem(position);
-      m_callbacks.onFaceItemSelected(faceStatus);
+      m_callbacks.onPingItemSelected();
     }
   }
 
@@ -401,7 +501,7 @@ public class PingListFragment extends ListFragment {
      *
      * @param faceStatus FaceStatus instance with information about the face
      */
-    public void onFaceItemSelected(FaceStatus faceStatus);
+    public void onPingItemSelected();
   }
 
   /////////////////////////////////////////////////////////////////////////
