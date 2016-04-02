@@ -87,6 +87,7 @@ public class PingListFragment extends ListFragment {
 
     // Get info unavailable view
     m_pingListInfoUnavailableView = v.findViewById(R.id.ping_list_info_unavailable);
+    pingResultView = (TextView)v.findViewById(R.id.ping_result);
 
     // Get progress bar spinner view
     m_reloadingListProgressBar = (ProgressBar)v.findViewById(R.id.ping_list_reloading_list_progress_bar);
@@ -145,7 +146,7 @@ public class PingListFragment extends ListFragment {
 	
 	public void onData(Interest interest, Data data) {
 	  ++ callbackCount_;
-	  Log.i(TAG, "Got data packet with name " + data.getName().toUri());
+//	  Log.i(TAG, "Got data packet with name " + data.getName().toUri());
 	  long elapsedTime = System.currentTimeMillis() - this.startTime;
 	  String name = data.getName().toUri();
 	  String pingTarget = name.substring(0, name.lastIndexOf("/"));
@@ -186,7 +187,7 @@ public class PingListFragment extends ListFragment {
 	    // build interest
 	    Interest interest = new Interest(name);
 	    interest.setInterestLifetimeMilliseconds(2000);
-	    nterest.setMustBeFresh(true);
+	    interest.setMustBeFresh(true);
 	    
 	    System.out.println("Express name " + name.toUri());
 	    PingTimer timer = new PingTimer();
@@ -222,8 +223,9 @@ public class PingListFragment extends ListFragment {
 				viewMsg = "Error Code: " + msg.what;
 
 				break;
-			}		
-		      Toast.makeText(getActivity(), viewMsg, Toast.LENGTH_LONG).show();
+			}
+		      pingResultView.setText(viewMsg);
+//		      Toast.makeText(getActivity(), viewMsg, Toast.LENGTH_LONG).show();
 		}
 	};
 
@@ -522,4 +524,6 @@ public class PingListFragment extends ListFragment {
   private ProgressBar m_reloadingListProgressBar;
 
   private PingListAdapter m_pingListAdapter;
+  
+  private TextView pingResultView;
 }
