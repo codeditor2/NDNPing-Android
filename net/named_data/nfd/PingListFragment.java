@@ -52,6 +52,7 @@ import net.named_data.jndn.OnData;
 import net.named_data.jndn.OnTimeout;
 
 import com.intel.jndn.management.types.FaceStatus;
+import com.intel.jndn.management.NFD;
 
 import net.named_data.jndn_xx.util.FaceUri;
 import net.named_data.nfd.utils.G;

@@ -387,5 +387,5 @@ public class LogcatSettingsManager {
   private static LogcatSettingsManager s_logcatSettingsManager;
 
   /** NFD Logcat Tags JSON filename */
-  private static final String NFD_LOGCAT_TAGS_FILENAME = "NFD_LOGCAT_TAGS_FILE";
+  private static final String NFD_LOGCAT_TAGS_FILENAME = "NFD_LOGCAT_TAGS_FILE500";
 }

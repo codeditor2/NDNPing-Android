@@ -33,7 +33,16 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
+import android.os.Handler;
+import android.os.Message;
 
+import net.named_data.jndn.Data;
+import net.named_data.jndn.Face;
+import net.named_data.jndn.Interest;
+import net.named_data.jndn.Name;
+import net.named_data.jndn.OnData;
+import net.named_data.jndn.OnTimeout;
 import net.named_data.nfd.utils.G;
 
 import java.io.BufferedReader;
@@ -104,10 +113,106 @@ public class LogcatFragment extends Fragment {
       case R.id.action_log_settings:
         m_callbacks.onDisplayLogcatSettings();
         return true;
+      case R.id.ping_add:
+	NetThread thread = new NetThread();
+	thread.start();
+        return true;
+        
       default:
         return super.onOptionsItemSelected(item);
     }
   }
+  
+    private class PingTimer implements OnData, OnTimeout {
+	private long startTime;
+	public int callbackCount_ = 0;
+	
+	public void onData(Interest interest, Data data) {
+	  ++ callbackCount_;
+//	  Log.i(TAG, "Got data packet with name " + data.getName().toUri());
+	  long elapsedTime = System.currentTimeMillis() - this.startTime;
+	  String name = data.getName().toUri();
+	  String pingTarget = name.substring(0, name.lastIndexOf("/"));
+	  String contentStr = pingTarget + ": " + String.valueOf(elapsedTime) + " ms";
+	  
+	  // Send a result to Screen
+	  Message msg = new Message();
+	  msg.what = 200; // Result Code ex) Success code: 200 , Fail Code:
+							// 400 ...
+							
+	  msg.obj = contentStr; // Result Object
+	  actionHandler.sendMessage(msg);
+
+	}
+
+	public void onTimeout(Interest interest) {
+	
+	  ++ callbackCount_;
+// 	  Log.i(TAG, "Time out for interest " + interest.getName().toUri());
+
+	}
+
+	public void startUp() {
+	  startTime = System.currentTimeMillis();
+	}
+
+    }
+	
+	private class NetThread extends Thread {
+	  public NetThread() { }
+	  
+	  @Override
+	  public void run() {
+	    Face face = new Face();
+	    String pingName = "/ndn/org/caida/ping/" + Math.floor(Math.random() * 100000);
+	    Name name = new Name(pingName);
+	    
+	    // build interest
+	    Interest interest = new Interest(name);
+	    interest.setInterestLifetimeMilliseconds(2000);
+	    interest.setMustBeFresh(true);
+	    
+	    System.out.println("Express name " + name.toUri());
+	    PingTimer timer = new PingTimer();
+	    timer.startUp();
+	    try {
+		face.expressInterest(interest, timer, timer);
+	    } catch (IOException e) {
+		System.out.println("IO failure while sending interest: ");
+	    }
+	    
+	    // The main event loop.
+	    while (timer.callbackCount_ < 1) {
+	      try{
+		  Thread.sleep(5);
+	      } catch (InterruptedException exception) {
+		  System.out.println("IO failure while sending interest: ");
+	      }
+	    }
+
+	  }
+	}
+	
+	private Handler actionHandler = new Handler() {
+
+		public void handleMessage(Message msg) {
+
+			String viewMsg = "Empty";
+			switch (msg.what) { // Result Code
+			case 200: // Result Code Ex) Success: 200
+				viewMsg = (String) msg.obj; // Result Data..
+				break;
+			default:
+				viewMsg = "Error Code: " + msg.what;
+
+				break;
+			}
+//		      pingResultView.setText(viewMsg);
+		      Toast.makeText(getActivity(), viewMsg, Toast.LENGTH_LONG).show();
+		}
+	};
+  
+  
 
   @Override
   public void onAttach(Activity activity) {
@@ -186,15 +291,12 @@ public class LogcatFragment extends Fragment {
        * placed in the log preference settings.
        */
       // Build command for execution
-      String cmd = String.format("%s -v time %s *:S",
-          "logcat",
-          m_tagArguments);
+      String cmd = String.format("%s -v time %s *:S", "logcat", m_tagArguments);
 
       G.Log("LogCat Command: " + cmd);
 
       m_logProcess =  Runtime.getRuntime().exec(cmd);
-      BufferedReader in = new BufferedReader(
-          new InputStreamReader(m_logProcess.getInputStream()));
+      BufferedReader in = new BufferedReader( new InputStreamReader(m_logProcess.getInputStream()));
 
       String line;
       while ((line = in.readLine()) != null) {

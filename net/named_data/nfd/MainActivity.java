@@ -78,7 +78,7 @@ public class MainActivity extends ActionBarActivity
       //    items.add(new DrawerFragment.DrawerItem(R.string.drawer_item_strategies, 0,
       //                                            DRAWER_ITEM_STRATEGIES));
       items.add(new DrawerFragment.DrawerItem(R.string.drawer_item_logcat, 0, DRAWER_ITEM_LOGCAT));
-      items.add(new DrawerFragment.DrawerItem(R.string.drawer_item_ping, 0, DRAWER_ITEM_PING));
+//      items.add(new DrawerFragment.DrawerItem(R.string.drawer_item_ping, 0, DRAWER_ITEM_PING));
 
       m_drawerFragment = DrawerFragment.newInstance(items);
 
@@ -163,12 +163,12 @@ public class MainActivity extends ActionBarActivity
         case DRAWER_ITEM_LOGCAT:
           fragment = LogcatFragment.newInstance();
           break;
-        case DRAWER_ITEM_PING:
-	  Toast.makeText(MainActivity.this, "ping clicked", Toast.LENGTH_LONG).show();
-	  fragment = PingListFragment.newInstance();
-//         	NetThread thread = new NetThread();
-// 		thread.start();
-	  break;
+//         case DRAWER_ITEM_PING:
+// 	  Toast.makeText(MainActivity.this, "ping clicked", Toast.LENGTH_LONG).show();
+// 	  fragment = PingListFragment.newInstance();
+// //         	NetThread thread = new NetThread();
+// // 		thread.start();
+// 	  break;
         default:
           // Invalid; Nothing else needs to be done
           return;
@@ -202,6 +202,7 @@ public class MainActivity extends ActionBarActivity
   @Override
   public void onPingItemSelected() {
   // 
+  
   }
 
   //////////////////////////////////////////////////////////////////////////////
