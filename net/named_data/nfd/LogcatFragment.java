@@ -36,6 +36,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.os.Handler;
 import android.os.Message;
+import android.os.Environment;
 
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Face;
@@ -46,8 +47,11 @@ import net.named_data.jndn.OnTimeout;
 import net.named_data.nfd.utils.G;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.File;
+import java.io.FileWriter;
 import java.util.ArrayList;
 
 /**
@@ -276,6 +280,18 @@ public class LogcatFragment extends Fragment {
     m_logListAdapter.addMessage(message);
     m_logListView.setSelection(m_logListAdapter.getCount() - 1);
   }
+  
+//   private void fileLog(File file, String message) {
+//     try {
+//       File file = new File(Environment.getExternalStorageDirectory() + "/nfd/log.txt"); 
+//       //第二个参数意义是说是否以append方式添加内容
+//       BufferedWriter bw = new BufferedWriter(new FileWriter(file, true));
+//       bw.write(message);
+//       bw.flush();
+//     } catch (Exception e) {
+//       e.printStackTrace();
+//     }  
+//   }
 
   /**
    * Convenience method to capture the output from logcat.
@@ -292,25 +308,32 @@ public class LogcatFragment extends Fragment {
        */
       // Build command for execution
       String cmd = String.format("%s -v time %s *:S", "logcat", m_tagArguments);
-
       G.Log("LogCat Command: " + cmd);
 
       m_logProcess =  Runtime.getRuntime().exec(cmd);
       BufferedReader in = new BufferedReader( new InputStreamReader(m_logProcess.getInputStream()));
-
+      
+//      File file = new File(Environment.getExternalStorageDirectory(),  "/nfd/" + String.valueOf(System.currentTimeMillis()) + ".txt");
+ //     BufferedWriter bw = new BufferedWriter(new FileWriter(file, true));
+      
       String line;
       while ((line = in.readLine()) != null) {
         final String message = line;
+//	try {
+//	  bw.write(line);
+//	} catch (Exception e) {
+//	  e.printStackTrace();
+//	}
         getActivity().runOnUiThread(new Runnable() {
           @Override
           public void run() {
             appendLogText(message);
           }
         });
-      }
-
+      }                                                                                                                                                                                             
       // Wait for process to join this thread
       m_logProcess.waitFor();
+      bw.flush();
     } catch (IOException | InterruptedException e) {
       G.Log("captureLog(): " + e);
     }
